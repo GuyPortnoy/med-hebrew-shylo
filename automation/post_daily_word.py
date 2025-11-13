@@ -1,9 +1,11 @@
+from pathlib import Path
 from dotenv import load_dotenv
 import os
 import requests
 from supabase import create_client, Client
 
-load_dotenv()
+dotenv_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path)
 
 # --- Environment variables ---
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -35,7 +37,7 @@ def get_word_of_the_day():
 def send_to_telegram(message: str):
     """Send word to Telegram channel."""
 
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    url = f"https://api.telegram.org/bot8169698787:AAEBNR3Sh5Jg_FBxkk7h5PaWUcEMDKLLlfg/sendMessage"
 
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
@@ -50,14 +52,15 @@ def send_to_telegram(message: str):
 def main():
     word = get_word_of_the_day()
 
-    if not word:
+    if word is None:
         print("⚠️ No new word found.")
+        return
 
-         message = (
-        "🗓 <b>Word of the Day</b>\n\n"
-        f"🇬🇧 <b>English:</b> {word['en']}\n"
-        f"🇮🇱 <b>Hebrew:</b> {word['he']}\n"
-        f"🇷🇺 <b>Russian:</b> {word['rus']}"
+    message = (
+            "🗓 <b>Word of the Day</b>\n\n"
+            f"🇬🇧 <b>English:</b> {word['en']}\n"
+            f"🇮🇱 <b>Hebrew:</b> {word['he']}\n"
+            f"🇷🇺 <b>Russian:</b> {word['rus']}"
     )
     send_to_telegram(message)
 
