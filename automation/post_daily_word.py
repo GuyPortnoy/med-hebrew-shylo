@@ -20,46 +20,46 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def get_word_of_the_day():
     """Fetch latest word from Supabase."""
-    response = (
-        supabase
-        .from_("words")
-        .select("he, en")
-        .order("id", desc=True)
-        .limit(1)
-        .execute()
-    )
-
-    if response.data:
-        word = response.data[0]
-        return word["he"], word["en"]
-    
-    return None, None
+    try:
+        response = supabase.table("words").select("en, he, rus").order("id", desc=True).limit(1).execute()
+        if response.data:
+            return response.data[0]
+        else:
+            print("No data found in 'words' table.")
+            return None
+    except Exception as e:
+        print("Error fetching word from Supabase:", e)
+        return None
 
 
-def send_to_telegram(hebrew, english):
+def send_to_telegram(message: str):
     """Send word to Telegram channel."""
-    message = f" *Word of the Day*\n\n🇮🇱 {hebrew}\n🇬🇧 {english}"
 
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
 
     payload = {
         "chat_id": TELEGRAM_CHAT_ID,
         "text": message,
-        "parse_mode": "Markdown"
+        "parse_mode": "HTML"
     }
 
-    requests.post(url, json=payload)
+    response = requests.post(url, data=payload)
+    print(response.json())
 
 
 def main():
-    he, en = get_word_of_the_day()
+    word = get_word_of_the_day()
 
-    if he:
-        send_to_telegram(he, en)
-        print(f"✅ Posted: {he} - {en}")
-    else:
+    if not word:
         print("⚠️ No new word found.")
 
+         message = (
+        "🗓 <b>Word of the Day</b>\n\n"
+        f"🇬🇧 <b>English:</b> {word['en']}\n"
+        f"🇮🇱 <b>Hebrew:</b> {word['he']}\n"
+        f"🇷🇺 <b>Russian:</b> {word['rus']}"
+    )
+    send_to_telegram(message)
 
 if __name__ == "__main__":
     main()
